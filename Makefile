@@ -497,7 +497,8 @@ compile_ar = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     $(AR) $(ARFLAGS) $(1) $(2)
 compile_objcopy = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " OBJCOPY   $(subst $(build_dir)/,,$(1))"; \
-	     $(OBJCOPY) -S -O binary $(2) $(1)
+	     $(OBJCOPY) -S -O binary $(2) $(1); \
+		 $(CROSS_COMPILE)objdump -D $(2) > $(2).dump;
 compile_dts = $(CMD_PREFIX)mkdir -p `dirname $(1)`; \
 	     echo " DTC       $(subst $(build_dir)/,,$(1))"; \
 	     $(CPP) $(DTSCPPFLAGS) $(2) | $(DTC) -O dtb -i `dirname $(2)` -o $(1)
