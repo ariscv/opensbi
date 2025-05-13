@@ -18,18 +18,34 @@
 #include <sbi_utils/serial/uart8250.h>
 #include <sbi_utils/timer/aclint_mtimer.h>
 
+////////////
+#define DEFAULT_RSTVEC     0x00001000
+#define CLINT_BASE         0x02000000
+#define CLINT_SIZE         0x000c0000
+#define PLIC_BASE          0x0c000000
+#define PLIC_SIZE          0x01000000
+#define PLIC_NDEV          31
+#define PLIC_PRIO_BITS     4
+#define NS16550_BASE       0x10000000
+#define NS16550_SIZE       0x100
+#define NS16550_REG_SHIFT  0
+#define NS16550_REG_IO_WIDTH 1
+#define NS16550_INTERRUPT_ID 1
+#define EXT_IO_BASE        0x40000000
+#define DRAM_BASE          0x80000000
+///////////
 #define PLATFORM_PLIC_ADDR		0xc000000
 #define PLATFORM_PLIC_SIZE		(0x200000 + \
 					 (PLATFORM_HART_COUNT * 0x1000))
 #define PLATFORM_PLIC_NUM_SOURCES	128
-#define PLATFORM_HART_COUNT		4
+#define PLATFORM_HART_COUNT		2//4
 #define PLATFORM_CLINT_ADDR		0x2000000
 #define PLATFORM_ACLINT_MTIMER_FREQ	10000000
 #define PLATFORM_ACLINT_MSWI_ADDR	(PLATFORM_CLINT_ADDR + \
 					 CLINT_MSWI_OFFSET)
 #define PLATFORM_ACLINT_MTIMER_ADDR	(PLATFORM_CLINT_ADDR + \
 					 CLINT_MTIMER_OFFSET)
-#define PLATFORM_UART_ADDR		0x09000000
+#define PLATFORM_UART_ADDR		0x10000000
 #define PLATFORM_UART_INPUT_FREQ	10000000
 #define PLATFORM_UART_BAUDRATE		115200
 
@@ -128,8 +144,8 @@ const struct sbi_platform platform = {
 	.platform_version	= SBI_PLATFORM_VERSION(0x0, 0x00),
 	.name			= "platform-name",
 	.features		= SBI_PLATFORM_DEFAULT_FEATURES,
-	.hart_count		= 1,
+	.hart_count		= PLATFORM_HART_COUNT,
 	.hart_stack_size	= SBI_PLATFORM_DEFAULT_HART_STACK_SIZE,
-	.heap_size		= SBI_PLATFORM_DEFAULT_HEAP_SIZE(1),
+	.heap_size		= SBI_PLATFORM_DEFAULT_HEAP_SIZE(PLATFORM_HART_COUNT),
 	.platform_ops_addr	= (unsigned long)&platform_ops
 };
