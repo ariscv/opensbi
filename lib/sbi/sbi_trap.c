@@ -301,8 +301,28 @@ static int sbi_trap_aia_irq(void)
  *
  * @param tcntx pointer to trap context
  */
+#define SBI_TRAP_LOG(format, ...)\
+  sbi_printf("\33[1;35m[%s,%d,%s] " format "\33[0m\n", \
+      __FILE__, __LINE__, __func__, ## __VA_ARGS__)
+const char *regs_names[] = {
+    "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
+    "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
+    "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
+    "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6",
+	"epc","mstatus","mstatusH"
+};
+
+void sbi_trap_print(struct sbi_trap_context *tcntx)
+{
+	SBI_TRAP_LOG("trap stack info:");
+	for(int i=0;i<35;i++){
+		SBI_TRAP_LOG("regs[%s]=0x%08x",regs_names[i],((uint32_t*)(&tcntx->regs))[i]);
+	}
+
+}
 struct sbi_trap_context *sbi_trap_handler(struct sbi_trap_context *tcntx)
 {
+	// sbi_printf("[sbi_trap_handler]OpenSBI:entered trap\n");
 	int rc = SBI_ENOTSUPP;
 	const char *msg = "trap handler failed";
 	struct sbi_scratch *scratch = sbi_scratch_thishart_ptr();
@@ -323,7 +343,8 @@ struct sbi_trap_context *sbi_trap_handler(struct sbi_trap_context *tcntx)
 		msg = "unhandled local interrupt";
 		goto trap_done;
 	}
-
+	// sbi_printf("[sbi_trap_handler]OpenSBI:mcause=%ld\n",mcause);
+	// sbi_trap_print(tcntx);
 	switch (mcause) {
 	case CAUSE_ILLEGAL_INSTRUCTION:
 		rc  = sbi_illegal_insn_handler(tcntx);
