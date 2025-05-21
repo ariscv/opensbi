@@ -302,7 +302,7 @@ static int sbi_trap_aia_irq(void)
  * @param tcntx pointer to trap context
  */
 #define SBI_TRAP_LOG(format, ...)\
-  sbi_printf("\33[1;35m[%s,%d,%s] " format "\33[0m\n", \
+  sbi_printf("\33[1;34m[%s,%d,%s] " format "\33[0m\n", \
       __FILE__, __LINE__, __func__, ## __VA_ARGS__)
 const char *regs_names[] = {
     "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
@@ -366,11 +366,19 @@ struct sbi_trap_context *sbi_trap_handler(struct sbi_trap_context *tcntx)
 		msg = "ecall handler failed";
 		break;
 	case CAUSE_LOAD_ACCESS:
+		//spin_lock(&console_out_lock);
+		SBI_TRAP_LOG("Load access fault at 0x%lx, pc=0x%lx",tcntx->trap.tval,tcntx->regs.mepc);
+		sbi_trap_print(tcntx);
+		//spin_unlock(&console_out_lock);
 		sbi_pmu_ctr_incr_fw(SBI_PMU_FW_ACCESS_LOAD);
 		rc  = sbi_load_access_handler(tcntx);
 		msg = "load fault handler failed";
 		break;
 	case CAUSE_STORE_ACCESS:
+		//spin_lock(&console_out_lock);
+		SBI_TRAP_LOG("Store access fault at 0x%lx, pc=0x%lx",tcntx->trap.tval,tcntx->regs.mepc);
+		sbi_trap_print(tcntx);
+		//spin_unlock(&console_out_lock);
 		sbi_pmu_ctr_incr_fw(SBI_PMU_FW_ACCESS_STORE);
 		rc  = sbi_store_access_handler(tcntx);
 		msg = "store fault handler failed";

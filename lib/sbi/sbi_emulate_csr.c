@@ -50,6 +50,9 @@ int sbi_emulate_csr_read(int csr_num, struct sbi_trap_regs *regs,
 	bool virt = sbi_regs_from_virt(regs);
 
 	switch (csr_num) {
+	case CSR_MHARTID:
+		*csr_val = csr_read(CSR_MHARTID);
+		break;
 	case CSR_HTIMEDELTA:
 		if (prev_mode == PRV_S && !virt)
 			*csr_val = sbi_timer_get_delta();

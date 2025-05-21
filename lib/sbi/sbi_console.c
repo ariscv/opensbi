@@ -20,7 +20,7 @@
 static const struct sbi_console_device *console_dev = NULL;
 static char console_tbuf[CONSOLE_TBUF_MAX];
 static u32 console_tbuf_len;
-static spinlock_t console_out_lock	       = SPIN_LOCK_INITIALIZER;
+spinlock_t console_out_lock	       = SPIN_LOCK_INITIALIZER;
 
 #ifdef CONFIG_CONSOLE_EARLY_BUFFER_SIZE
 #define CONSOLE_EARLY_BUFFER_SIZE	CONFIG_CONSOLE_EARLY_BUFFER_SIZE

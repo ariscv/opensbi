@@ -12,6 +12,9 @@
 
 #include <sbi/sbi_types.h>
 
+#include <sbi/riscv_locks.h>
+extern spinlock_t console_out_lock;
+
 struct sbi_console_device {
 	/** Name of the console device */
 	char name[32];
