@@ -6,7 +6,7 @@
 # Authors:
 #   Anup Patel <anup.patel@wdc.com>
 #
-
+DEBUG=y
 # Select Make Options:
 # o  Do not use make's built-in rules
 # o  Do not print "Entering directory ...";

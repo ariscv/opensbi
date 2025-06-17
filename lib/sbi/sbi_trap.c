@@ -302,8 +302,8 @@ static int sbi_trap_aia_irq(void)
  * @param tcntx pointer to trap context
  */
 #define SBI_TRAP_LOG(format, ...)\
-  sbi_printf("\33[1;34m[%s,%d,%s] " format "\33[0m\n", \
-      __FILE__, __LINE__, __func__, ## __VA_ARGS__)
+  sbi_printf("\33[1;34m[%s,%d,%s,cpu%ld] " format "\33[0m\n", \
+      __FILE__, __LINE__, __func__, csr_read(CSR_MHARTID) ,## __VA_ARGS__)
 const char *regs_names[] = {
     "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
     "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
@@ -320,6 +320,24 @@ void sbi_trap_print(struct sbi_trap_context *tcntx)
 	}
 
 }
+void sbi_trap_print_trap(struct sbi_trap_info *trap){
+	SBI_TRAP_LOG("trap info:");
+	SBI_TRAP_LOG("trap->cause=%ld, %s",(trap->cause&~(1UL<<31)),(trap->cause>>31)?"Interrupt":"Exception");
+	SBI_TRAP_LOG("trap->tval =%ld",trap->tval );
+	SBI_TRAP_LOG("trap->tval2=%ld",trap->tval2);
+	SBI_TRAP_LOG("trap->tinst=%ld",trap->tinst);
+	SBI_TRAP_LOG("trap->gva  =%ld",trap->gva  );
+}
+void sbi_trap_print_priv(struct sbi_trap_context *tcntx){
+	uint32_t mip=csr_read(mip),mie=csr_read(mie);
+	SBI_TRAP_LOG("mip=%x,|%d,%d,%d",mip,(uint32_t)!!(mip&MIP_MSIP),(uint32_t)!!(mip&MIP_SSIP),(uint32_t)!!(mip&MIP_VSSIP));
+	SBI_TRAP_LOG("mie=%x,|%d,%d,%d",mie,(uint32_t)!!(mie&MIP_MSIP),(uint32_t)!!(mie&MIP_SSIP),(uint32_t)!!(mie&MIP_VSSIP));
+}
+void sbi_trap_print_tcntx(struct sbi_trap_context *tcntx){
+	sbi_trap_print_trap(&tcntx->trap);
+	sbi_trap_print_priv(tcntx);
+}
+
 struct sbi_trap_context *sbi_trap_handler(struct sbi_trap_context *tcntx)
 {
 	// sbi_printf("[sbi_trap_handler]OpenSBI:entered trap\n");
@@ -333,6 +351,12 @@ struct sbi_trap_context *sbi_trap_handler(struct sbi_trap_context *tcntx)
 	/* Update trap context pointer */
 	tcntx->prev_context = sbi_trap_get_context(scratch);
 	sbi_trap_set_context(scratch, tcntx);
+
+	//调试
+	/* if(csr_read(mhartid)==1){
+		SBI_TRAP_LOG("Begin of trap --");
+		sbi_trap_print_tcntx(tcntx);
+	} */
 
 	if (mcause & MCAUSE_IRQ_MASK) {
 		if (sbi_hart_has_extension(sbi_scratch_thishart_ptr(),
@@ -367,8 +391,8 @@ struct sbi_trap_context *sbi_trap_handler(struct sbi_trap_context *tcntx)
 		break;
 	case CAUSE_LOAD_ACCESS:
 		//spin_lock(&console_out_lock);
-		SBI_TRAP_LOG("Load access fault at 0x%lx, pc=0x%lx",tcntx->trap.tval,tcntx->regs.mepc);
-		sbi_trap_print(tcntx);
+		// SBI_TRAP_LOG("Load access fault at 0x%lx, pc=0x%lx",tcntx->trap.tval,tcntx->regs.mepc);
+		// sbi_trap_print(tcntx);
 		//spin_unlock(&console_out_lock);
 		sbi_pmu_ctr_incr_fw(SBI_PMU_FW_ACCESS_LOAD);
 		rc  = sbi_load_access_handler(tcntx);
@@ -376,8 +400,8 @@ struct sbi_trap_context *sbi_trap_handler(struct sbi_trap_context *tcntx)
 		break;
 	case CAUSE_STORE_ACCESS:
 		//spin_lock(&console_out_lock);
-		SBI_TRAP_LOG("Store access fault at 0x%lx, pc=0x%lx",tcntx->trap.tval,tcntx->regs.mepc);
-		sbi_trap_print(tcntx);
+		// SBI_TRAP_LOG("Store access fault at 0x%lx, pc=0x%lx",tcntx->trap.tval,tcntx->regs.mepc);
+		// sbi_trap_print(tcntx);
 		//spin_unlock(&console_out_lock);
 		sbi_pmu_ctr_incr_fw(SBI_PMU_FW_ACCESS_STORE);
 		rc  = sbi_store_access_handler(tcntx);
@@ -402,5 +426,11 @@ trap_done:
 		sbi_sse_process_pending_events(regs);
 
 	sbi_trap_set_context(scratch, tcntx->prev_context);
+
+	//调试
+	/* if(csr_read(mhartid)==1){
+		SBI_TRAP_LOG("End of trap --");
+		sbi_trap_print_tcntx(tcntx);
+	} */
 	return tcntx;
 }
